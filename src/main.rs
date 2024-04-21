@@ -1,19 +1,18 @@
 use std::sync::Arc;
 
-use askama::Template;
 use axum::{
-    extract::State,
     http::StatusCode,
-    response::{Html, IntoResponse, Response},
+    response::{IntoResponse, Response},
     routing::{get, post},
-    Form, Router,
+    Router,
 };
-use serde::Deserialize;
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::{services::ServeDir, trace::TraceLayer};
-use tower_sessions::{MemoryStore, Session, SessionManagerLayer};
-use tracing::debug;
+use tower_sessions::{MemoryStore, SessionManagerLayer};
+
+mod guess;
+mod index;
 
 const GUESSES_KEY: &str = "guesses";
 
@@ -30,8 +29,8 @@ async fn main() {
     };
 
     let app = Router::new()
-        .route("/", get(root))
-        .route("/guess", post(guess))
+        .route("/", get(index::index))
+        .route("/guess", post(guess::guess))
         .nest_service("/static", ServeDir::new("static"))
         .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
         .layer(SessionManagerLayer::new(session_store))
@@ -44,44 +43,6 @@ async fn main() {
 struct User {
     color: String,
     name: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct Guess {
-    name: String,
-}
-
-#[derive(Template)]
-#[template(path = "index.html")]
-struct IndexTemplate;
-
-async fn root() -> Result<Html<String>, AppError> {
-    Ok(Html(IndexTemplate {}.render()?))
-}
-
-#[derive(Template)]
-#[template(path = "guess1.html")]
-struct Guess1Template<'a> {
-    color: &'a str,
-    name_placeholder: &'a str,
-}
-
-async fn guess(
-    State(user): State<Arc<User>>,
-    session: Session,
-    Form(guess): Form<Guess>,
-) -> Result<Html<String>, AppError> {
-    let mut guesses: Vec<String> = session.get(GUESSES_KEY).await?.unwrap_or_default();
-    guesses.push(guess.name);
-    session.insert(GUESSES_KEY, guesses).await?;
-
-    Ok(Html(
-        Guess1Template {
-            color: &user.color,
-            name_placeholder: &user.name.chars().map(|_| "*").collect::<String>(),
-        }
-        .render()?,
-    ))
 }
 
 struct AppError(anyhow::Error);
