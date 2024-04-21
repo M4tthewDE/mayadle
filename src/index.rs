@@ -6,8 +6,9 @@ use axum::{extract::State, response::Html};
 use tower_sessions::Session;
 
 use crate::{
+    api::Message,
     guess::{Guess1Template, Guess2Template},
-    AppError, User, GUESSES_KEY,
+    AppError, GUESSES_KEY,
 };
 
 #[derive(Template)]
@@ -17,7 +18,7 @@ struct IndexTemplate {
 }
 
 pub async fn index(
-    State(user): State<Arc<User>>,
+    State(msg): State<Arc<Message>>,
     session: Session,
 ) -> Result<Html<String>, AppError> {
     let guesses: Vec<String> = session.get(GUESSES_KEY).await?.unwrap_or_default();
@@ -28,8 +29,8 @@ pub async fn index(
             1 => {
                 content.push_str(
                     &Guess1Template {
-                        color: &user.color,
-                        name_placeholder: &user.name.chars().map(|_| "*").collect::<String>(),
+                        color: &msg.color,
+                        name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
                     }
                     .render()?,
                 );
@@ -37,9 +38,9 @@ pub async fn index(
             2 => {
                 content.push_str(
                     &Guess2Template {
-                        color: &user.color,
-                        name_placeholder: &user.name.chars().map(|_| "*").collect::<String>(),
-                        message: &user.message,
+                        color: &msg.color,
+                        name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
+                        message: &msg.message,
                     }
                     .render()?,
                 );

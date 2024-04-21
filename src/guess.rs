@@ -6,7 +6,7 @@ use axum::{extract::State, response::Html, Form};
 use serde::Deserialize;
 use tower_sessions::Session;
 
-use crate::{AppError, User, GUESSES_KEY};
+use crate::{api::Message, AppError, GUESSES_KEY};
 
 #[derive(Debug, Deserialize)]
 pub struct Guess {
@@ -29,7 +29,7 @@ pub struct Guess2Template<'a> {
 }
 
 pub async fn guess(
-    State(user): State<Arc<User>>,
+    State(msg): State<Arc<Message>>,
     session: Session,
     Form(guess): Form<Guess>,
 ) -> Result<Html<String>, AppError> {
@@ -41,16 +41,16 @@ pub async fn guess(
     match guess_count {
         1 => Ok(Html(
             Guess1Template {
-                color: &user.color,
-                name_placeholder: &user.name.chars().map(|_| "*").collect::<String>(),
+                color: &msg.color,
+                name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
             }
             .render()?,
         )),
         2 => Ok(Html(
             Guess2Template {
-                color: &user.color,
-                name_placeholder: &user.name.chars().map(|_| "*").collect::<String>(),
-                message: &user.message,
+                color: &msg.color,
+                name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
+                message: &msg.message,
             }
             .render()?,
         )),

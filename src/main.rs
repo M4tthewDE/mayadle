@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use api::pick_message;
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -12,6 +13,7 @@ use tower_http::{services::ServeDir, trace::TraceLayer};
 use tower_sessions::SessionManagerLayer;
 use tower_sessions_sqlx_store::{sqlx::SqlitePool, SqliteStore};
 
+mod api;
 mod guess;
 mod index;
 
@@ -25,13 +27,7 @@ async fn main() {
     let session_store = SqliteStore::new(pool);
     session_store.migrate().await.unwrap();
 
-    // TODO: generate daily
-    // maybe pick message on startup and then restart once a day?
-    let user = User {
-        color: "#00FF7F".to_string(),
-        name: "matthewde".to_string(),
-        message: "link".to_string(),
-    };
+    let msg = pick_message();
 
     let app = Router::new()
         .route("/", get(index::index))
@@ -39,16 +35,10 @@ async fn main() {
         .nest_service("/static", ServeDir::new("static"))
         .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
         .layer(SessionManagerLayer::new(session_store))
-        .with_state(Arc::new(user));
+        .with_state(Arc::new(msg));
 
     let listener = TcpListener::bind("0.0.0.0:8080").await.unwrap();
     axum::serve(listener, app).await.unwrap();
-}
-
-struct User {
-    color: String,
-    name: String,
-    message: String,
 }
 
 struct AppError(anyhow::Error);
