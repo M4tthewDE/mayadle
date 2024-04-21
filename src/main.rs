@@ -9,7 +9,8 @@ use axum::{
 use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::{services::ServeDir, trace::TraceLayer};
-use tower_sessions::{MemoryStore, SessionManagerLayer};
+use tower_sessions::SessionManagerLayer;
+use tower_sessions_sqlx_store::{sqlx::SqlitePool, SqliteStore};
 
 mod guess;
 mod index;
@@ -20,7 +21,9 @@ const GUESSES_KEY: &str = "guesses";
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let session_store = MemoryStore::default();
+    let pool = SqlitePool::connect("sqlite://sessions.db").await.unwrap();
+    let session_store = SqliteStore::new(pool);
+    session_store.migrate().await.unwrap();
 
     // TODO: generate daily
     let user = User {
