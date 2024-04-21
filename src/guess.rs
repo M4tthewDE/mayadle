@@ -28,6 +28,15 @@ pub struct Guess2Template<'a> {
     pub message: &'a str,
 }
 
+#[derive(Template)]
+#[template(path = "guess3.html")]
+pub struct Guess3Template<'a> {
+    pub color: &'a str,
+    pub name_placeholder: &'a str,
+    pub message: &'a str,
+    pub badges: &'a Vec<String>,
+}
+
 pub async fn guess(
     State(msg): State<Arc<Message>>,
     session: Session,
@@ -51,6 +60,15 @@ pub async fn guess(
                 color: &msg.color,
                 name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
                 message: &msg.message,
+            }
+            .render()?,
+        )),
+        3 => Ok(Html(
+            Guess3Template {
+                color: &msg.color,
+                name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
+                message: &msg.message,
+                badges: &msg.badges,
             }
             .render()?,
         )),

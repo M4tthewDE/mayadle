@@ -7,7 +7,7 @@ use tower_sessions::Session;
 
 use crate::{
     api::Message,
-    guess::{Guess1Template, Guess2Template},
+    guess::{Guess1Template, Guess2Template, Guess3Template},
     AppError, GUESSES_KEY,
 };
 
@@ -41,6 +41,17 @@ pub async fn index(
                         color: &msg.color,
                         name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
                         message: &msg.message,
+                    }
+                    .render()?,
+                );
+            }
+            3 => {
+                content.push_str(
+                    &Guess3Template {
+                        color: &msg.color,
+                        name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
+                        message: &msg.message,
+                        badges: &msg.badges,
                     }
                     .render()?,
                 );
