@@ -2,7 +2,7 @@ use askama::Template;
 use axum::{
     http::StatusCode,
     response::{Html, IntoResponse, Response},
-    routing::get,
+    routing::{get, post},
     Router,
 };
 use tokio::net::TcpListener;
@@ -15,10 +15,16 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(root))
+        .route("/guess", post(guess))
         .nest_service("/static", ServeDir::new("static"))
         .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()));
     let listener = TcpListener::bind("0.0.0.0:8080").await.unwrap();
     axum::serve(listener, app).await.unwrap();
+}
+
+struct User {
+    color: String,
+    name: String,
 }
 
 #[derive(Template)]
@@ -27,6 +33,28 @@ struct IndexTemplate;
 
 async fn root() -> Result<Html<String>, AppError> {
     Ok(Html(IndexTemplate {}.render()?))
+}
+
+#[derive(Template)]
+#[template(path = "guess1.html")]
+struct Guess1Template<'a> {
+    color: &'a str,
+    name_placeholder: &'a str,
+}
+
+async fn guess() -> Result<Html<String>, AppError> {
+    let user = User {
+        color: "#00FF7F".to_string(),
+        name: "matthewde".to_string(),
+    };
+
+    Ok(Html(
+        Guess1Template {
+            color: &user.color,
+            name_placeholder: &user.name.chars().map(|_| "*").collect::<String>(),
+        }
+        .render()?,
+    ))
 }
 
 struct AppError(anyhow::Error);

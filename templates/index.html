@@ -4,12 +4,13 @@
 		<meta charset="utf-8">
 		<title>title</title>
 		<link rel="stylesheet" href="static/style.css">
+		<script src="static/htmx.min.js"></script>
 	</head>
 	<body>
 		<h1>Mayadle</h1>
 		<form>
 		<input type="text">
-		<input type="submit" value="Guess">
+		<input type="submit" value="Guess" hx-post="/guess" hx-swap="afterend">
 		</form>
 	</body>
 </html>
