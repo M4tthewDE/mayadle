@@ -10,7 +10,8 @@
 		<h1>Mayadle</h1>
 		<form>
 		<input type="text" name="name">
-		<input type="submit" value="Guess" hx-post="/guess" hx-swap="afterend">
+		<input type="submit" value="Guess" hx-post="/guess" hx-target="#guesses" hx-swap="beforeend">
 		</form>
+		<div id="guesses"></div>
 	</body>
 </html>

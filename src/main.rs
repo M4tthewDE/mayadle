@@ -26,6 +26,7 @@ async fn main() {
     let user = User {
         color: "#00FF7F".to_string(),
         name: "matthewde".to_string(),
+        message: "link".to_string(),
     };
 
     let app = Router::new()
@@ -43,6 +44,7 @@ async fn main() {
 struct User {
     color: String,
     name: String,
+    message: String,
 }
 
 struct AppError(anyhow::Error);
