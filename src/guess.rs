@@ -15,17 +15,17 @@ pub struct Guess {
 
 #[derive(Template)]
 #[template(path = "guess1.html")]
-struct Guess1Template<'a> {
-    color: &'a str,
-    name_placeholder: &'a str,
+pub struct Guess1Template<'a> {
+    pub color: &'a str,
+    pub name_placeholder: &'a str,
 }
 
 #[derive(Template)]
 #[template(path = "guess2.html")]
-struct Guess2Template<'a> {
-    color: &'a str,
-    name_placeholder: &'a str,
-    message: &'a str,
+pub struct Guess2Template<'a> {
+    pub color: &'a str,
+    pub name_placeholder: &'a str,
+    pub message: &'a str,
 }
 
 pub async fn guess(

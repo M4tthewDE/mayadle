@@ -26,6 +26,7 @@ async fn main() {
     session_store.migrate().await.unwrap();
 
     // TODO: generate daily
+    // maybe pick message on startup and then restart once a day?
     let user = User {
         color: "#00FF7F".to_string(),
         name: "matthewde".to_string(),
