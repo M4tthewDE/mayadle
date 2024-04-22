@@ -27,7 +27,7 @@ async fn main() {
     let session_store = SqliteStore::new(pool);
     session_store.migrate().await.unwrap();
 
-    let msg = pick_message();
+    let msg = pick_message().await.unwrap();
 
     let app = Router::new()
         .route("/", get(index::index))
