@@ -7,7 +7,7 @@ use axum::{extract::State, response::Html};
 use tower_sessions::Session;
 
 use crate::{
-    api::Message,
+    api::DailyMessage,
     guess::{Guess1Template, Guess2Template, Guess3Template},
     AppError, GUESSES_KEY,
 };
@@ -19,7 +19,7 @@ struct IndexTemplate {
 }
 
 pub async fn index(
-    State(msg): State<Arc<Message>>,
+    State(msg): State<Arc<DailyMessage>>,
     session: Session,
 ) -> Result<Response, AppError> {
     let guesses: Vec<String> = session.get(GUESSES_KEY).await?.unwrap_or_default();
@@ -31,7 +31,11 @@ pub async fn index(
                 content.push_str(
                     &Guess1Template {
                         color: &msg.color,
-                        name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
+                        name_placeholder: &msg
+                            .display_name
+                            .chars()
+                            .map(|_| "*")
+                            .collect::<String>(),
                     }
                     .render()?,
                 );
@@ -40,8 +44,12 @@ pub async fn index(
                 content.push_str(
                     &Guess2Template {
                         color: &msg.color,
-                        name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
-                        message: &msg.message,
+                        name_placeholder: &msg
+                            .display_name
+                            .chars()
+                            .map(|_| "*")
+                            .collect::<String>(),
+                        message: &msg.text,
                     }
                     .render()?,
                 );
@@ -50,8 +58,12 @@ pub async fn index(
                 content.push_str(
                     &Guess3Template {
                         color: &msg.color,
-                        name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
-                        message: &msg.message,
+                        name_placeholder: &msg
+                            .display_name
+                            .chars()
+                            .map(|_| "*")
+                            .collect::<String>(),
+                        message: &msg.text,
                         badges: &msg.badges,
                     }
                     .render()?,

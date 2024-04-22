@@ -2,22 +2,25 @@ use anyhow::{anyhow, Result};
 use rand::prelude::SliceRandom;
 use serde::{Deserialize, Serialize};
 
-pub struct Message {
+#[derive(Debug)]
+pub struct DailyMessage {
     pub color: String,
-    pub name: String,
-    pub message: String,
+    pub display_name: String,
+    pub text: String,
     pub badges: Vec<String>,
 }
 
 // TODO: generate daily
 // maybe pick message on startup and then restart once a day?
-pub async fn pick_message() -> Result<Message> {
-    let _chatter = pick_chatter().await?;
+pub async fn pick_message() -> Result<DailyMessage> {
+    let chatter = pick_chatter().await?;
+    let msg = get_message(chatter).await?;
 
-    Ok(Message {
-        color: "#00FF7F".to_string(),
-        name: "matthewde".to_string(),
-        message: "link".to_string(),
+    Ok(DailyMessage {
+        color: msg.tags.color,
+        display_name: msg.display_name,
+        text: msg.text,
+        // TODO:
         badges: vec![
             "https://static-cdn.jtvnw.net/badges/v1/b817aba4-fad8-49e2-b88a-7cc744dfa6ec/1"
                 .to_string(),
@@ -49,4 +52,36 @@ async fn pick_chatter() -> Result<Chatter> {
         .choose(&mut rand::thread_rng())
         .cloned()
         .ok_or_else(|| anyhow!("no chatter found"))
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct Tags {
+    badges: String,
+    color: String,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct Message {
+    #[serde(alias = "displayName")]
+    display_name: String,
+    tags: Tags,
+    text: String,
+}
+#[derive(Serialize, Deserialize)]
+struct Messages {
+    messages: Vec<Message>,
+}
+
+async fn get_message(chatter: Chatter) -> Result<Message> {
+    reqwest::get(format!(
+        "https://logs.ivr.fi/channel/maya/user/{}/random?json",
+        chatter.name
+    ))
+    .await?
+    .json::<Messages>()
+    .await?
+    .messages
+    .first()
+    .cloned()
+    .ok_or_else(|| anyhow!("no message found"))
 }

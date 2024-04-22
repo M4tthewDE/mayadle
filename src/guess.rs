@@ -11,7 +11,7 @@ use axum::{
 use serde::Deserialize;
 use tower_sessions::Session;
 
-use crate::{api::Message, AppError, GUESSES_KEY};
+use crate::{api::DailyMessage, AppError, GUESSES_KEY};
 
 const MAX_GUESSES: usize = 3;
 
@@ -45,7 +45,7 @@ pub struct Guess3Template<'a> {
 }
 
 pub async fn guess(
-    State(msg): State<Arc<Message>>,
+    State(msg): State<Arc<DailyMessage>>,
     session: Session,
     Form(guess): Form<Guess>,
 ) -> Result<Response, AppError> {
@@ -62,7 +62,7 @@ pub async fn guess(
         1 => Ok(Html(
             Guess1Template {
                 color: &msg.color,
-                name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
+                name_placeholder: &msg.display_name.chars().map(|_| "*").collect::<String>(),
             }
             .render()?,
         )
@@ -70,8 +70,8 @@ pub async fn guess(
         2 => Ok(Html(
             Guess2Template {
                 color: &msg.color,
-                name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
-                message: &msg.message,
+                name_placeholder: &msg.display_name.chars().map(|_| "*").collect::<String>(),
+                message: &msg.text,
             }
             .render()?,
         )
@@ -79,8 +79,8 @@ pub async fn guess(
         3 => Ok(Html(
             Guess3Template {
                 color: &msg.color,
-                name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
-                message: &msg.message,
+                name_placeholder: &msg.display_name.chars().map(|_| "*").collect::<String>(),
+                message: &msg.text,
                 badges: &msg.badges,
             }
             .render()?,

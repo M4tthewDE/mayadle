@@ -12,6 +12,7 @@ use tower::ServiceBuilder;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 use tower_sessions::SessionManagerLayer;
 use tower_sessions_sqlx_store::{sqlx::SqlitePool, SqliteStore};
+use tracing::debug;
 
 mod api;
 mod guess;
@@ -28,6 +29,7 @@ async fn main() {
     session_store.migrate().await.unwrap();
 
     let msg = pick_message().await.unwrap();
+    debug!("daily message: {:?}", msg);
 
     let app = Router::new()
         .route("/", get(index::index))
