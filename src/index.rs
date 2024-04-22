@@ -1,6 +1,7 @@
+use anyhow::anyhow;
+use axum::response::{IntoResponse, Response};
 use std::sync::Arc;
 
-use anyhow::anyhow;
 use askama::Template;
 use axum::{extract::State, response::Html};
 use tower_sessions::Session;
@@ -20,7 +21,7 @@ struct IndexTemplate {
 pub async fn index(
     State(msg): State<Arc<Message>>,
     session: Session,
-) -> Result<Html<String>, AppError> {
+) -> Result<Response, AppError> {
     let guesses: Vec<String> = session.get(GUESSES_KEY).await?.unwrap_or_default();
 
     let mut content = String::new();
@@ -60,5 +61,5 @@ pub async fn index(
         }
     }
 
-    Ok(Html(IndexTemplate { guesses: content }.render()?))
+    Ok(Html(IndexTemplate { guesses: content }.render()?).into_response())
 }

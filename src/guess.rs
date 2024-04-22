@@ -2,11 +2,18 @@ use std::sync::Arc;
 
 use anyhow::anyhow;
 use askama::Template;
-use axum::{extract::State, response::Html, Form};
+use axum::{
+    extract::State,
+    http::StatusCode,
+    response::{Html, IntoResponse, Response},
+    Form,
+};
 use serde::Deserialize;
 use tower_sessions::Session;
 
 use crate::{api::Message, AppError, GUESSES_KEY};
+
+const MAX_GUESSES: usize = 3;
 
 #[derive(Debug, Deserialize)]
 pub struct Guess {
@@ -41,8 +48,12 @@ pub async fn guess(
     State(msg): State<Arc<Message>>,
     session: Session,
     Form(guess): Form<Guess>,
-) -> Result<Html<String>, AppError> {
+) -> Result<Response, AppError> {
     let mut guesses: Vec<String> = session.get(GUESSES_KEY).await?.unwrap_or_default();
+    if guesses.len() == MAX_GUESSES {
+        return Ok(StatusCode::NO_CONTENT.into_response());
+    }
+
     guesses.push(guess.name);
     let guess_count = guesses.len();
     session.insert(GUESSES_KEY, guesses).await?;
@@ -54,7 +65,8 @@ pub async fn guess(
                 name_placeholder: &msg.name.chars().map(|_| "*").collect::<String>(),
             }
             .render()?,
-        )),
+        )
+        .into_response()),
         2 => Ok(Html(
             Guess2Template {
                 color: &msg.color,
@@ -62,7 +74,8 @@ pub async fn guess(
                 message: &msg.message,
             }
             .render()?,
-        )),
+        )
+        .into_response()),
         3 => Ok(Html(
             Guess3Template {
                 color: &msg.color,
@@ -71,7 +84,8 @@ pub async fn guess(
                 badges: &msg.badges,
             }
             .render()?,
-        )),
+        )
+        .into_response()),
         g => Err(AppError(anyhow!("guess {} is not implemented", g))),
     }
 }
