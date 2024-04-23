@@ -9,7 +9,7 @@ use tower_sessions::Session;
 use crate::{
     api::DailyMessage,
     guess::{Guess1Template, Guess2Template, Guess3Template},
-    AppError, GUESSES_KEY,
+    session, AppError,
 };
 
 #[derive(Template)]
@@ -22,7 +22,7 @@ pub async fn index(
     State(msg): State<Arc<DailyMessage>>,
     session: Session,
 ) -> Result<Response, AppError> {
-    let guesses: Vec<String> = session.get(GUESSES_KEY).await?.unwrap_or_default();
+    let guesses = session::get_guesses(&session).await?;
 
     let mut content = String::new();
     for (i, _) in guesses.iter().enumerate() {

@@ -11,22 +11,16 @@ use tokio::net::TcpListener;
 use tower::ServiceBuilder;
 use tower_http::{services::ServeDir, trace::TraceLayer};
 use tower_sessions::SessionManagerLayer;
-use tower_sessions_sqlx_store::{sqlx::SqlitePool, SqliteStore};
 use tracing::debug;
 
 mod api;
 mod guess;
 mod index;
-
-const GUESSES_KEY: &str = "guesses";
+mod session;
 
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
-
-    let pool = SqlitePool::connect("sqlite://sessions.db").await.unwrap();
-    let session_store = SqliteStore::new(pool);
-    session_store.migrate().await.unwrap();
 
     let msg = pick_message().await.unwrap();
     debug!("daily message: {:?}", msg);
@@ -36,7 +30,9 @@ async fn main() {
         .route("/guess", post(guess::guess))
         .nest_service("/static", ServeDir::new("static"))
         .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
-        .layer(SessionManagerLayer::new(session_store))
+        .layer(SessionManagerLayer::new(
+            session::get_store().await.unwrap(),
+        ))
         .with_state(Arc::new(msg));
 
     let listener = TcpListener::bind("0.0.0.0:8080").await.unwrap();

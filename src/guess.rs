@@ -11,7 +11,7 @@ use axum::{
 use serde::Deserialize;
 use tower_sessions::Session;
 
-use crate::{api::DailyMessage, AppError, GUESSES_KEY};
+use crate::{api::DailyMessage, session, AppError};
 
 const MAX_GUESSES: usize = 3;
 
@@ -49,14 +49,14 @@ pub async fn guess(
     session: Session,
     Form(guess): Form<Guess>,
 ) -> Result<Response, AppError> {
-    let mut guesses: Vec<String> = session.get(GUESSES_KEY).await?.unwrap_or_default();
+    let mut guesses = session::get_guesses(&session).await?;
     if guesses.len() == MAX_GUESSES {
         return Ok(StatusCode::NO_CONTENT.into_response());
     }
 
     guesses.push(guess.name);
     let guess_count = guesses.len();
-    session.insert(GUESSES_KEY, guesses).await?;
+    session::save_guesses(&session, guesses).await?;
 
     match guess_count {
         1 => Ok(Html(
